@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Model;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.eclipse.core.resources.IFile;
@@ -39,9 +40,11 @@ import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.embedder.IMavenExecutionContext;
 import org.eclipse.m2e.core.internal.MavenPluginActivator;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
+import org.eclipse.m2e.core.project.IMavenProjectRegistry;
 import org.eclipse.m2e.core.project.MavenProjectInfo;
 import org.eclipse.m2e.core.project.ProjectImportConfiguration;
 import org.eclipse.m2e.tests.common.AbstractMavenProjectTestCase;
+import org.eclipse.m2e.tests.common.WorkspaceHelpers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -133,5 +136,31 @@ public class MavenBugsTest extends AbstractMavenProjectTestCase {
 			assertNotNull("getAllProjects", session.getAllProjects());
 			return session.getResult();
 		}, monitor);
+	}
+	
+	@Test
+	public void testRevisionLeak() throws Exception {
+		IMavenProjectRegistry registry = MavenPlugin.getMavenProjectRegistry();
+		
+		// Parent project
+		IProject parent = importProject("resources/projects/revisionLeak/common/pom.xml");
+		IMavenProjectFacade parentFacade = registry.create(parent, monitor);
+		MavenProject parentProject = parentFacade.getMavenProject(monitor);
+		assertEquals("3.3.2-SNAPSHOT", parentProject.getVersion());
+		
+		// Child project
+		IProject child = importProject("resources/projects/revisionLeak/child/pom.xml");
+		IMavenProjectFacade childFacade = registry.create(child, monitor);
+		MavenProject childProject = childFacade.getMavenProject(monitor);
+		assertEquals("2.0.1-SNAPSHOT", childProject.getVersion());
+
+		// Checks if the child revision has leaked to the parent
+		Model effectiveModel  = childProject.getModel();
+		Object commonVersion = effectiveModel.getProperties().get("common.version");
+		assertEquals("3.3.2-SNAPSHOT", commonVersion);
+		
+		// Checks if the child project builds successfully
+		child.build(IncrementalProjectBuilder.CLEAN_BUILD, monitor);
+		WorkspaceHelpers.assertNoErrors(child);	
 	}
 }

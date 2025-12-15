@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+		
+	<groupId>m2e.test.common</groupId>
+	<artifactId>common.parent</artifactId>
+	<version>${revision}</version>
+	<packaging>pom</packaging>
+
+	<properties>
+        <common.version>${revision}</common.version>
+    </properties>
+
+	<modules>
+		<module>common.bom</module>
+	</modules>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>m2e.test.common</groupId>
+				<artifactId>common.bom</artifactId>
+				<version>${common.version}</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>flatten-maven-plugin</artifactId>
+					<version>1.5.0</version>
+					<configuration>
+						<keepCommentsInPom>true</keepCommentsInPom>
+						<flattenMode>resolveCiFriendliesOnly</flattenMode>
+						<updatePomFile>true</updatePomFile>						
+					</configuration>
+					<executions>
+          				<execution>
+            				<id>flatten</id>
+            				<phase>initialize</phase>
+            				<goals>
+              					<goal>flatten</goal>
+            				</goals>            				
+          				</execution>
+          				<execution>
+          					<id>flatten-clean</id>
+          					<phase>clean</phase>
+            				<goals>
+              					<goal>clean</goal>
+            				</goals>
+          				</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+	
+</project>
